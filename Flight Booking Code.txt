@@ -1,0 +1,131 @@
+package com.cucumber.stepdefs;
+package com.cucumber.tests;
+
+import java.util.concurrent.TimeUnit;
+import org.openqa.selenium.By;
+import org.openqa.selenium.Keys;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.By;
+import org.openqa.selenium.WebElement;
+import com.cucumber.tests.TestNGRunCucumberTest;
+ 
+import cucumber.api.java.en.And;
+import cucumber.api.java.en.Given;
+import cucumber.api.java.en.Then;
+import cucumber.api.java.en.When;
+
+
+public class StepDefinitions { 
+
+	public static WebDriver driver;
+        String baseURL = "https://makemytrip.com";  //as example taken makemytrip.com website
+		
+	@Given("^user launches flight booking website$")	
+        public void user_launches_FlightBooking_website() throws Throwable {
+	System.setProperty("webdriver.chrome.driver","C:\\work\\chromedriver.exe");
+        driver=new ChromeDriver();
+        driver.manage().window().maximize();
+        driver.get(baseURL);}
+        
+        @When("^user selects the source point \"([^\"]*)\"$")  //source coming from feature file
+        public void user_selects_sourcepoint(String source) throws Throwable {
+        driver.findElement(By.xpath("(//input[@id='fromCity'])")).click();
+        driver.findElement(By.xpath("(//input[@id='fromCity'])")).sendKeys(source);
+        driver.findElement(By.xpath("(//input[@id='fromCity'])")).sendKeys(Keys.DOWN,Keys.ENTER);}
+
+        @When("^user selects the destination point \"([^\"]*)\"$") //destination coming from feature file
+        public void user_selects_destinationpoint(String destination) throws Throwable {
+        driver.findElement(By.xpath("(//input[@id='toCity'])")).click();
+        driver.findElement(By.xpath("(//input[@id='toCity'])")).sendKeys(destination);
+        driver.findElement(By.xpath("(//input[@id='toCity'])")).sendKeys(Keys.DOWN,Keys.ENTER);}
+
+        @And("^user clicks the search button$")
+        public void user_clicks_searchButton() throws Throwable {
+        driver.findElement(By.xpath("(//*[text()='Search'])")).click();}
+
+
+        @Then("^user selects the cheapest price filter under price filter section to get the list of only cheapest flights$")
+        public void user_selects_cheapestPriceFilter() throws Throwable {
+        driver.findElement(By.xpath("(//*[text()='Price Filter']//span[@class='check'][1])")).click();}  //selecting the first filter which is cheapest
+
+
+        @Then("^user clicks the duration header to sort the list of flights ascending order of their duration$")
+        public void user_clicks_durationSortButton() throws Throwable {
+        driver.findElement(By.xpath("(//span[text()='Duration'])")).click();} //clicking on duration tab sorts the duration of flights in ascending order
+
+
+        @Then("^user selects fastest evening flight in the list of flights displayed$")
+        public void user_selects_fastestEveningFlight() throws Throwable {
+        List<WebElement> depRecord = driver.findElements(By.xpath("(//div[@class='dept-options-section clearfix'])"));
+
+        //above list conatins the list of flight records and then each record is processed through foreach loop to check 
+        //the evening flights. Here evening time is considered from 5 to 8 that is 17:00 to 20:00.
+
+        for (WebElement depR : depRecord ){
+            String time = depR.findElement(By.xpath("(//div[@class='dept-time'])")).getText();
+            //above the time is fetched from each record. ex- output is 17:00
+            String tim="";
+            tim=time.substring(0,1); //ex- here 17 is fetched from 17:00
+            int t = Integer.parseInt(tim); //here string 17 is coverted into integer
+            if((t >=17) && (t<=20))// here if time is between 17:00 to 20:00 then only it will goinside if condition and click the book button of that record
+            {
+             WebElement book=depR.findElement(By.xpath("(//div[@class='fli-book'])")).click();
+            }
+             break;//here as soon as the first "if" condition gets true the for each loop is exited because that will be the fastest evening
+                   //flight as it is already in ascending order of duration because of previous method.
+         }
+         }
+      
+
+}
+
+
+TestRunner file--->
+
+package com.cucumber.tests;
+package com.cucumber.stepdefs;
+
+import org.junit.runner.RunWith;
+import cucumber.api.CucumberOptions;
+import cucumber.api.junit.Cucumber;
+
+@RunWith(Cucumber.class)
+@CucumberOptions(
+        features = "src/test/Feature"
+        ,glue={"src/main/stepDefinitions"}
+        )
+
+public class TestNGRunCucumberTest{
+
+}
+
+
+
+
+
+Testng xml file----->
+
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd">
+<suite name="FlightBooking" parallel="tests" thread-count="3">
+ 
+    <test name="TEST_CHROME">
+        <parameter name="browser" value="Chrome" />
+        <classes>
+            <class name="com.cucumber.tests.TestNGRunCucumberTest" />
+        </classes>
+    </test>
+
+   <test name="TEST_SAFARI">
+        <parameter name="browser" value="Safari" />
+        <classes>
+            <class name="com.cucumber.tests.TestNGRunCucumberTest" />
+        </classes>
+    </test>
+</suite>
+
+
+
+
+
